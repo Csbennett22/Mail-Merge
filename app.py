@@ -1,13 +1,3 @@
-import sys
-import os
-
-# When run directly with `python app.py`, re-launch via streamlit.
-# The env var prevents re-entry when Streamlit itself re-executes this file.
-if __name__ == "__main__" and not os.environ.get("_STREAMLIT_RUNNING"):
-    import subprocess
-    env = {**os.environ, "_STREAMLIT_RUNNING": "1"}
-    sys.exit(subprocess.call([sys.executable, "-m", "streamlit", "run", __file__] + sys.argv[1:], env=env))
-
 import io
 import re
 import pandas as pd
