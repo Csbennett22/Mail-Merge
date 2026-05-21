@@ -5,29 +5,29 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from pathlib import Path
 
+_FONTS_DIR = Path(__file__).parent / "fonts"
+
+_fonts_registered = False
+
 def register_fonts():
+    global _fonts_registered
+    if _fonts_registered:
+        return
     pdfmetrics.registerFont(
-        TTFont(
-            "Petit Formal Script",
-            "fonts/PetitFormalScript-Regular.ttf"
-        )
+        TTFont("Petit Formal Script", str(_FONTS_DIR / "PetitFormalScript-Regular.ttf"))
     )
-
     pdfmetrics.registerFont(
-        TTFont(
-            "Montserrat",
-            "fonts/Montserrat-VariableFont_wght.ttf"
-        )
+        TTFont("Montserrat", str(_FONTS_DIR / "Montserrat-VariableFont_wght.ttf"))
     )
-
-    #pdfmetrics.registerFont(
-    #    TTFont(
-    #        "Montserrat-Bold",
-    #        "fonts/Montserrat-Bold.ttf"
-    #    )
-    #)
+    _fonts_registered = True
 
 
+
+def read_file(file_path):
+    path = str(file_path) if not isinstance(file_path, str) else file_path
+    if path.lower().endswith(".csv"):
+        return pd.read_csv(file_path)
+    return pd.read_excel(file_path)
 
 def read_excel(file_path):
     df = pd.read_excel(file_path)
@@ -117,14 +117,17 @@ def create_envelope_pdf(
     addresses,
     output_path,
     envelope_size_inches=(7.25, 5.25),
+    name_size=21,
+    address_size=15,
 ):
     envelope_size = (
         envelope_size_inches[0] * inch,
         envelope_size_inches[1] * inch,
     )
 
-    c = canvas.Canvas(str(output_path), pagesize=envelope_size)
-    #c = canvas.Canvas(output_path, pagesize=envelope_size)
+    # canvas.Canvas accepts a filename string, Path, or file-like object (e.g. BytesIO)
+    dest = output_path if hasattr(output_path, "write") else str(output_path)
+    c = canvas.Canvas(dest, pagesize=envelope_size)
     width, height = envelope_size
 
     for _, row in addresses.iterrows():
@@ -135,6 +138,8 @@ def create_envelope_pdf(
             name=row["Name"],
             address=row["Address"],
             zip_code=row["Zip"],
+            name_size=name_size,
+            address_size=address_size,
         )
         c.showPage()
 
